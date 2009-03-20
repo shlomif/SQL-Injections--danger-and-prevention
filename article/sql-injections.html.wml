@@ -1,5 +1,31 @@
 #include "shlomif-shlomif-article.wml"
 <article_subject "SQL Injections" />
 <article_description "SQL Injections - why are they dangerous and how to avoid them" />
-<article_keywords "SQL, injections, database" />
+<article_keywords "SQL, injections, database, security" />
 
+<h2 id="intro">Introduction</h2>
+
+<p>
+<a href="http://en.wikipedia.org/wiki/SQL_injection">SQL injection</a> is
+a common form of vulnerability in applications that work against SQL databases.
+This article will explain what SQL injections are, why they are dangerous
+and give some advice on how to avoid them
+</p>
+
+<h2 id="what_are_sql_injections">What are SQL Injections?</h2>
+
+<p>
+Let's suppose we have the following table definition in an 
+<a href="http://www.sqlite.org/">SQLite</a> database with the filename of
+<tt>injection1.sql</tt>:
+</p>
+
+<pre>
+CREATE TABLE names (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR (255)
+);
+</pre>
+
+<p>
+We've written a 
