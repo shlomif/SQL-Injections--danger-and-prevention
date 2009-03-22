@@ -17,7 +17,7 @@ and give some advice on how to avoid them
 <p>
 Let's suppose we have the following table definition in an 
 <a href="http://www.sqlite.org/">SQLite</a> database with the filename of
-<tt>injection1.sql</tt>:
+<tt>injection1.db</tt>:
 </p>
 
 <pre>
@@ -28,4 +28,112 @@ CREATE TABLE names (
 </pre>
 
 <p>
-We've written a 
+Let's say we've written a program to insert a new name into the 
+<tt>names</tt> table like so:
+</p>
+
+<pre>
+print( "Enter a name to insert:\n" )
+name = input()
+db = SQLite3::Database.new( "injection1.db" )
+db.execute( 
+           "INSERT INTO names (id, name) VALUES (null, " + name + ")" 
+          )
+</pre>
+
+<p>
+(It's written in <a href="http://www.ruby-lang.org/en/">Ruby</a>, but should 
+be easy to understand for people who are not familiar with it.)
+</p>
+
+<p>
+As one can see this program passes the name directly as the field argument
+in the SQL. It works if we enter a number:
+</p>
+
+<pre>
+$ ruby insert-without-quotes.rb
+Enter a name to insert:
+180
+$
+</pre>
+
+<p>
+But if we try to insert some letters, we get: 
+</p>
+
+<pre>
+$ ruby insert-without-quotes.rb
+Enter a name to insert:
+Jake
+/usr/lib/ruby/site_ruby/1.8/sqlite3/errors.rb:62:in `check': no such column: Jake (SQLite3::SQLException)
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/statement.rb:39:in `initialize'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `new'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `prepare'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:181:in `execute'
+        from insert-without-quotes.rb:7
+</pre>
+
+<p>
+The important thing here is the "no such column" error that we get from 
+SQLite. What happens is that the SQL backend does not know how to understand
+the barewords. Therefore, we must enclose the string in the SQL standard
+single quotes (<tt>'…'</tt>). This makes our code the following:
+</p>
+
+<pre>
+print( "Enter a name to insert:\n" )
+name = input()
+
+db = SQLite3::Database.new( "injection1.db" )
+db.execute( 
+    "INSERT INTO names (id, name) VALUES (null, " + "'" + name + "'" + ")" 
+)
+</pre>
+
+<p>
+This seems to work fine:
+</p>
+
+<pre>
+$ ruby insert-with-quotes.rb
+Enter a name to insert:
+Jake
+$ ruby insert-with-quotes.rb
+Enter a name to insert:
+Sophie
+$ sqlite3 injection1.db
+SQLite version 3.6.11
+Enter ".help" for instructions
+Enter SQL statements terminated with a ";"
+sqlite&gt; SELECT * FROM names ;
+1|Jake
+2|Sophie
+</pre>
+
+<p>
+But is it really bullet-proof? Notice that we inserted the name field directly
+into the SQL. What will happen if it contains single-quotes that terminate 
+the string prematurely. The answer is that in case it may either simply fail:
+</p>
+
+<pre>
+$ ruby insert-with-quotes.rb
+Enter a name to insert:
+Ralph O'Henry
+/usr/lib/ruby/site_ruby/1.8/sqlite3/errors.rb:62:in `check': near "Henry": syntax error (SQLite3::SQLException)
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/statement.rb:39:in `initialize'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `new'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `prepare'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:181:in `execute'
+        from insert-with-quotes.rb:14
+</pre>
+
+<p>
+But since we can terminate the string, and then proceed to insert arbitrary
+SQL, it could be much worse:
+</p>
+
+<pre>
+
+</pre>
