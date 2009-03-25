@@ -1,0 +1,1 @@
+a');DROP TABLE names; SELECT * FROM data WHERE (name LIKE '%

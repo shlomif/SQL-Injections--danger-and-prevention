@@ -28,7 +28,7 @@ CREATE TABLE names (
 </pre>
 
 <p>
-Let's say we've written a program to insert a new name into the 
+Let's say we've written a program to insert a new name into the
 <tt>names</tt> table like so:
 </p>
 
@@ -36,7 +36,7 @@ Let's say we've written a program to insert a new name into the
 print( "Enter a name to insert:\n" )
 name = input()
 db = SQLite3::Database.new( "injection1.db" )
-db.execute( 
+db.execute_batch( 
            "INSERT INTO names (id, name) VALUES (null, " + name + ")" 
           )
 </pre>
@@ -86,7 +86,7 @@ print( "Enter a name to insert:\n" )
 name = input()
 
 db = SQLite3::Database.new( "injection1.db" )
-db.execute( 
+db.execute_batch( 
     "INSERT INTO names (id, name) VALUES (null, " + "'" + name + "'" + ")" 
 )
 </pre>
@@ -135,5 +135,68 @@ SQL, it could be much worse:
 </p>
 
 <pre>
-
+$ ruby insert-with-quotes.rb
+Enter a name to insert:
+a');DROP TABLE names; SELECT * FROM data WHERE (name LIKE '%
+/usr/lib/ruby/site_ruby/1.8/sqlite3/errors.rb:62:in `check': no such table: data (SQLite3::SQLException)
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/statement.rb:39:in `initialize'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `new'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `prepare'
+        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:225:in `execute_batch'
+        from insert-with-quotes.rb:14
 </pre>
+
+<p>
+And now if we look at the database, we'll see that the "names" table have
+been dropped! What happened? Due to the way the SQL portion was inserted 
+directly between the quotes, our query has become the following:
+</p>
+
+<pre>
+INSERT INTO names (id, name) VALUES (null, 'a');
+DROP TABLE names;
+SELECT * FROM data WHERE (name LIKE '%')
+</pre>
+
+<p>
+These are in fact three SQL statements grouped into one: the first inserts
+a dummy value into names. The second drops the table, and the third forms
+a well-formed query that will be compilable by strict SQL engines but that
+would in fact just serve to terminate the rest of the query passed
+by the code.
+</p>
+
+<p>
+Even if the interface to the database did not allow us to execute as many 
+statements as we'd like, then SQL injection attacks can still do a lot of 
+damage. For example the following example taken from <a href="http://en.wikipedia.org/wiki/SQL_injection">the wikipedia page about SQL injections</a>:
+</p>
+
+<p>
+With the code:
+</p>
+
+<pre>
+statement = "SELECT * FROM users WHERE name = '" + userName + "';"
+</pre>
+
+<p>
+And the following value of the userName variable:
+</p>
+
+<pre>
+a' or 't'='t
+</pre>
+
+<p>
+Then the query becomes:
+</p>
+
+<pre>
+SELECT * FROM users WHERE name = 'a' OR 't'='t';
+</pre>
+
+<p>
+And as such the WHERE condition always evaluates to true, bypassing potential
+security measurements.
+</p>
