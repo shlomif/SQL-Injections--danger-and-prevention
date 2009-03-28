@@ -219,3 +219,67 @@ using an SQL injection vulnerability.
 </p>
 
 <h2 id="defending">How to defend against SQL Injections</h2>
+
+<p>
+There are several ways a conscious programmer can defend against SQL
+injection vulnerabilities. The first way is to use the database interface's
+"quote" or "escape" function to escape a string before inserting into the
+SQL query. PHP+MySQL have 
+<a href="http://php.net/mysql_real_escape_string">mysql_real_escape_string</a>
+for that, while <a href="http://dbi.perl.org/">Perl's DBI</a> has 
+<tt>$dbh-&gt;quote</tt>, and other languages and backend combinations have
+other functions. Note that sometimes these functions return an embeddable 
+portion of the SQL string that should be inserted into a larger SQL string. 
+Like so:
+</p>
+
+<pre>
+query = "INSERT INTO names (id, name) VALUES (null, '" + escape(name) "')";
+</pre>
+
+<p>
+And sometimes they return an entire, quoted SQL expression:
+</p>
+
+<pre>
+query = sprintf("INSERT INTO names (id, name) VALUES (null, %s)", quote(name));
+</pre>
+
+<p>
+Consult the documentation for what is the case. If it is the latter, then
+you must pass the rest of the quoted string to the quote function.
+</p>
+
+<p>
+An even better way to protect against the possibility of an SQL injection
+is to use <a href="http://en.wikipedia.org/wiki/SQL_injection#Using_Parameterized_Statements">placeholders</a>. They work by designating various places inside
+the query as placeholders for values, which are then filled when the
+query is executed. So our pseudocode will look like:
+</p>
+
+<pre>
+insert_query = prepare("INSERT INTO names (id, name) VALUES (null, ?)");
+.
+.
+.
+insert_query.execute(name1);
+insert_query.execute(name2);
+insert_query.execute("String with single-quotes - ' - won't break.");
+</pre>
+
+<p>
+Notice the "?" at the query, and the fact that we can pass the raw,
+unprocessed, variable as is to the query in its place. Not only is this very 
+secure, but preparing a statement and executing it several times with different
+parameters, is also a useful optimisation technique in most modern SQL
+databases. This is because the database backend can compile the query in
+advance and only sustitute parameters upon execution.
+</p>
+
+<p>
+Some database interfaces have named placeholders (for example, using ":name"
+or ":address") instead of the positional "?" placeholders. They are 
+preferrable because they can be re-used in the same query, and are harder
+to mix up when calling execute.
+</p>
+
