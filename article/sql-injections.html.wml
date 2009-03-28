@@ -7,7 +7,7 @@
 
 <p>
 <a href="http://en.wikipedia.org/wiki/SQL_injection">SQL injection</a> is
-a common form of vulnerability in applications that work against SQL databases.
+a common form of vulnerability in applications that are using SQL databases.
 This article will explain what SQL injections are, why they are dangerous
 and give some advice on how to avoid them
 </p>
@@ -200,3 +200,22 @@ SELECT * FROM users WHERE name = 'a' OR 't'='t';
 And as such the WHERE condition always evaluates to true, bypassing potential
 security measurements.
 </p>
+
+<h2 id="the_danger">The Danger of SQL Injection</h2>
+
+<p>
+SQL injection vulnerabilities are extremely dangerous. Reportedly
+<a href="http://www.rimmkaufman.com/rkgblog/2006/09/27/11-of-sites-vulnerable-to-sql-injection-is-yours/">at 
+least 11% of the Internet's web-sites are vulnerable to SQL injection</a> 
+and it is featured in <a href="http://www.sans.org/top25errors/">The SANS 
+Institute's "Top 25 Most Dangerous Programming Errors"</a>. There was
+also <a href="http://xkcd.com/327/">an xkcd comic about it</a>.
+</p>
+
+<p>
+<a href="http://blog.wired.com/monkeybites/2008/04/microsoft-datab.html">Wired
+reported on an attack</a> that caused half a million servers to be infected
+using an SQL injection vulnerability.
+</p>
+
+<h2 id="defending">How to defend against SQL Injections</h2>
