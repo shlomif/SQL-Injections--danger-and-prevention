@@ -76,8 +76,8 @@ Jake
 
 <p>
 The important thing here is the "no such column" error that we get from 
-SQLite. What happens is that the SQL backend does not know how to understand
-the barewords. Therefore, we must enclose the string in the SQL standard
+SQLite. What happens is that the SQL back-end does not know how to understand
+the bare words. Therefore, we must enclose the string in the SQL standard
 single quotes (<tt>'…'</tt>). This makes our code the following:
 </p>
 
@@ -169,7 +169,7 @@ by the code.
 <p>
 Even if the interface to the database did not allow us to execute as many 
 statements as we'd like, then SQL injection attacks can still do a lot of 
-damage. For example the following example taken from <a href="http://en.wikipedia.org/wiki/SQL_injection">the wikipedia page about SQL injections</a>:
+damage. For example the following example taken from <a href="http://en.wikipedia.org/wiki/SQL_injection">the Wikipedia page about SQL injections</a>:
 </p>
 
 <p>
@@ -254,7 +254,7 @@ you must pass the rest of the quoted string to the quote function.
 An even better way to protect against the possibility of an SQL injection
 is to use <a href="http://en.wikipedia.org/wiki/SQL_injection#Using_Parameterized_Statements">placeholders</a>. They work by designating various places inside
 the query as placeholders for values, which are then filled when the
-query is executed. So our pseudocode will look like:
+query is executed. So our pseudo-code will look like:
 </p>
 
 <pre>
@@ -273,13 +273,13 @@ unprocessed, variable as is to the query in its place. Not only is this very
 secure, but preparing a statement and executing it several times with different
 parameters, is also a useful optimisation technique in most modern SQL
 databases. This is because the database backend can compile the query in
-advance and only sustitute parameters upon execution.
+advance and only substitute parameters upon execution.
 </p>
 
 <p>
 Some database interfaces have named placeholders (for example, using ":name"
 or ":address") instead of the positional "?" placeholders. They are 
-preferrable because they can be re-used in the same query, and are harder
+preferable because they can be re-used in the same query, and are harder
 to mix up when calling execute.
 </p>
 
@@ -306,16 +306,16 @@ SQL Injection</h3>
 
 <p>
 There are other ways, that are helpful to reduce the danger of SQL injections.
-They are not a subtitute for properly using placeholders or escaping, but they
+They are not a substitute for properly using placeholders or escaping, but they
 are still helpful to reduce the possible damage an attacker can cause. First
 of all it may be a good idea to make sure only one query can be executed
 by a single "execute()" call, so the "DROP TABLE" example given above won't 
-work. Consult your database driver's documentation for how to achiev at that.
+work. Consult your database driver's documentation for how to achieve at that.
 </p>
 
 <p>
 Another useful measure is to make sure that the database user that executes the
-queries does not have extreanous permissions that will allow it to do much
+queries does not have extraneous permissions that will allow it to do much
 damage in case an SQL injection is found. 
 </p>
 
