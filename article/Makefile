@@ -6,7 +6,10 @@ WML_FLAGS += --passoption=2,-X3074 --passoption=3,-w
 
 all: $(FILE)
 
-$(FILE) : $(SRC_FILE)
+$(FILE) : $(FILE).before postproc.pl
+	perl postproc.pl -o $@ $<
+
+$(FILE).before : $(SRC_FILE)
 	wml $(WML_FLAGS) -o $@ $< 
 
 EXTRA_FILES = TODO DONE
