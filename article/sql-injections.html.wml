@@ -283,3 +283,47 @@ preferrable because they can be re-used in the same query, and are harder
 to mix up when calling execute.
 </p>
 
+<h3 id="regex">Escaping SQL inside Regular Expressions</h3>
+
+<p>
+<a href="http://phroggy.com/weblog/63.html">phroggy reports on another 
+variation on SQL injection</a>. Essentially, when we use the 
+<a href="http://www.infogoal.com/sql/sql-like.htm">LIKE operator</a>,
+it matches a string against a pattern with '%' (any number of zero or
+more characters) and '_' (any single character). If part of it is a 
+string that is input from the user, then the pattern special characters in the 
+string should be escaped as well.
+</p>
+
+<p>
+This is also true when we invoke the database's more POSIX-like or Perl-like
+regular expressions, in which case we may have more characters that need
+escaping.
+</p>
+
+<h3 id="other_way">Other Measures to Reduce the Danger of 
+SQL Injection</h3>
+
+<p>
+There are other ways, that are helpful to reduce the danger of SQL injections.
+They are not a subtitute for properly using placeholders or escaping, but they
+are still helpful to reduce the possible damage an attacker can cause. First
+of all it may be a good idea to make sure only one query can be executed
+by a single "execute()" call, so the "DROP TABLE" example given above won't 
+work. Consult your database driver's documentation for how to achiev at that.
+</p>
+
+<p>
+Another useful measure is to make sure that the database user that executes the
+queries does not have extreanous permissions that will allow it to do much
+damage in case an SQL injection is found. 
+</p>
+
+<h2 id="summary">Summary</h2>
+
+<p>
+SQL injections pose a big risk to the security of applications and data that
+work with an SQL database. We hope this article gave you the necessary tools
+and knowledge to write safer SQL-calling code that won't be vulnerable
+to this issue.
+</p>
