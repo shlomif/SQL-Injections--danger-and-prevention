@@ -248,30 +248,28 @@ using an SQL injection vulnerability.
 There are several ways a conscious programmer can defend against SQL
 injection vulnerabilities. The first way is to use the database interface's
 "quote" or "escape" function to escape a string before inserting into the
-SQL query. PHP+MySQL have 
+SQL query. For example, PHP+MySQL have
 <a href="http://php.net/mysql_real_escape_string">mysql_real_escape_string</a>
 for that, while <a href="http://dbi.perl.org/">Perl's DBI</a> has 
-<tt>$dbh-&gt;quote</tt>, and other languages and backend combinations have
-other functions. Note that sometimes these functions return an embeddable 
-portion of the SQL string that should be inserted into a larger SQL string. 
-Like so:
+<tt>$dbh-&gt;quote</tt>. Note that sometimes these functions return an 
+embeddable  portion of the SQL string that should be inserted into a larger 
+SQL string like so:
 </p>
 
 <pre>
-query = "INSERT INTO names (id, name) VALUES (null, '" + escape(name) "')";
+query = "INSERT INTO names (id, name) VALUES (null, '" + escape(name) + "')";
 </pre>
 
 <p>
-And sometimes they return an entire, quoted SQL expression:
+And sometimes they return an entire, quoted SQL string:
 </p>
 
 <pre>
-query = sprintf("INSERT INTO names (id, name) VALUES (null, %s)", quote(name));
+query = "INSERT INTO names (id, name) VALUES (null, " + quote(name) + ")");
 </pre>
 
 <p>
-Consult the documentation for what is the case. If it is the latter, then
-you must pass the rest of the quoted string to the quote function.
+Consult the documentation for what is the case. 
 </p>
 
 <p>
@@ -293,11 +291,7 @@ insert_query.execute("String with single-quotes - ' - won't break.");
 
 <p>
 Notice the "?" at the query, and the fact that we can pass the raw,
-unprocessed, variable as is to the query in its place. Not only is this very 
-secure, but preparing a statement and executing it several times with different
-parameters, is also a useful optimisation technique in most modern SQL
-databases. This is because the database backend can compile the query in
-advance and only substitute parameters upon execution.
+unprocessed, variable as is to the query in its place.
 </p>
 
 <p>
@@ -320,21 +314,19 @@ string should be escaped as well.
 </p>
 
 <p>
-This is also true when we invoke the database's more POSIX-like or Perl-like
-regular expressions, in which case we may have more characters that need
-escaping.
+This is also true for other forms of regular expressions that are supported
+by the database implementation.
 </p>
 
 <h3 id="other_way">Other Measures to Reduce the Danger of 
 SQL Injection</h3>
 
 <p>
-There are other ways, that are helpful to reduce the danger of SQL injections.
-They are not a substitute for properly using placeholders or escaping, but they
-are still helpful to reduce the possible damage an attacker can cause. First
-of all it may be a good idea to make sure only one query can be executed
-by a single "execute()" call, so the "DROP TABLE" example given above won't 
-work. Consult your database driver's documentation for how to achieve at that.
+There are other measures that are helpful to reduce the possible damage an 
+attacker can cause. First of all it may be a good idea to make sure only one 
+query can be executed by a single "execute()" call, so the "DROP TABLE" 
+example given above won't work. Consult your database driver's documentation 
+for how to achieve that.
 </p>
 
 <p>
