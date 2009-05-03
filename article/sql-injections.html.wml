@@ -6,7 +6,7 @@
 <h2 id="intro">Introduction</h2>
 
 <p>
-Most database servers out there have standarised on using a query syntax
+Most database servers have standarised on using a query syntax
 derived from <a href="http://en.wikipedia.org/wiki/SQL">SQL - The
 Structured Query Language</a>, where one can use text queries based on
 SQL commands such as 
