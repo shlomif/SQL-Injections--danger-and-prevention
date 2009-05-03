@@ -16,8 +16,7 @@ and give some advice on how to avoid them
 
 <p>
 Let's suppose we have the following table definition in an 
-<a href="http://www.sqlite.org/">SQLite</a> database with the filename of
-<tt>injection1.db</tt>:
+<a href="http://www.mysql.com/">MySQL</a> database called test_injection1:
 </p>
 
 <pre>
@@ -35,10 +34,15 @@ Let's say we've written a program to insert a new name into the
 <pre>
 print( "Enter a name to insert:\n" )
 name = input()
-db = SQLite3::Database.new( "injection1.db" )
-db.execute_batch( 
-           "INSERT INTO names (id, name) VALUES (null, " + name + ")" 
-          )
+
+dbh = Mysql.real_connect(
+    "localhost", user, password, "test_injection1", 
+    nil, nil, Mysql::CLIENT_MULTI_STATEMENTS
+)
+
+dbh.query(
+    "INSERT INTO names (id, name) VALUES (null, " + name + ")" 
+)
 </pre>
 
 <p>
@@ -54,8 +58,7 @@ in the SQL. It works if we enter a number:
 <pre>
 $ ruby insert-without-quotes.rb
 Enter a name to insert:
-180
-$
+150
 </pre>
 
 <p>
@@ -66,17 +69,13 @@ But if we try to insert some letters, we get:
 $ ruby insert-without-quotes.rb
 Enter a name to insert:
 Jake
-/usr/lib/ruby/site_ruby/1.8/sqlite3/errors.rb:62:in `check': no such column: Jake (SQLite3::SQLException)
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/statement.rb:39:in `initialize'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `new'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `prepare'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:181:in `execute'
-        from insert-without-quotes.rb:7
+insert-without-quotes.rb:18:in `query': Unknown column 'Jake' in 'field list' (Mysql::Error)
+        from insert-without-quotes.rb:18
 </pre>
 
 <p>
-The important thing here is the "no such column" error that we get from 
-SQLite. What happens is that the SQL back-end does not know how to understand
+The important thing here is the "Unknown column" error that we get from 
+MySQL. What happens is that the SQL back-end does not know how to understand
 the bare words. Therefore, we must enclose the string in the SQL standard
 single quotes (<tt>'…'</tt>). This makes our code the following:
 </p>
@@ -85,8 +84,12 @@ single quotes (<tt>'…'</tt>). This makes our code the following:
 print( "Enter a name to insert:\n" )
 name = input()
 
-db = SQLite3::Database.new( "injection1.db" )
-db.execute_batch( 
+dbh = Mysql.real_connect(
+    "localhost", user, password, "test_injection1", 
+    nil, nil, Mysql::CLIENT_MULTI_STATEMENTS
+)
+
+dbh.query(
     "INSERT INTO names (id, name) VALUES (null, " + "'" + name + "'" + ")" 
 )
 </pre>
@@ -102,13 +105,21 @@ Jake
 $ ruby insert-with-quotes.rb
 Enter a name to insert:
 Sophie
-$ sqlite3 injection1.db
-SQLite version 3.6.11
-Enter ".help" for instructions
-Enter SQL statements terminated with a ";"
-sqlite&gt; SELECT * FROM names ;
-1|Jake
-2|Sophie
+$ mysql test_injection1
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1058
+Server version: 5.1.34 Mandriva Linux - MySQL Standard Edition (GPL)
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql&gt;  SELECT * FROM names ;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | Jake   |
+|  2 | Sophie |
++----+--------+
+2 rows in set (0.03 sec)
 </pre>
 
 <p>
@@ -121,12 +132,8 @@ the string prematurely. The answer is that in case it may either simply fail:
 $ ruby insert-with-quotes.rb
 Enter a name to insert:
 Ralph O'Henry
-/usr/lib/ruby/site_ruby/1.8/sqlite3/errors.rb:62:in `check': near "Henry": syntax error (SQLite3::SQLException)
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/statement.rb:39:in `initialize'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `new'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `prepare'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:181:in `execute'
-        from insert-with-quotes.rb:14
+insert-with-quotes.rb:18:in `query': You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'Henry')' at line 1 (Mysql::Error)
+        from insert-with-quotes.rb:18
 </pre>
 
 <p>
@@ -138,16 +145,19 @@ SQL, it could be much worse:
 $ ruby insert-with-quotes.rb
 Enter a name to insert:
 a');DROP TABLE names; SELECT * FROM data WHERE (name LIKE '%
-/usr/lib/ruby/site_ruby/1.8/sqlite3/errors.rb:62:in `check': no such table: data (SQLite3::SQLException)
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/statement.rb:39:in `initialize'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `new'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:154:in `prepare'
-        from /usr/lib/ruby/site_ruby/1.8/sqlite3/database.rb:225:in `execute_batch'
-        from insert-with-quotes.rb:14
+$ mysql test_injection1
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1090
+Server version: 5.1.34 Mandriva Linux - MySQL Standard Edition (GPL)
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql&gt; SELECT * FROM names ;
+ERROR 1146 (42S02): Table 'test_injection1.names' doesn't exist
 </pre>
 
 <p>
-And now if we look at the database, we'll see that the "names" table have
+So looking at the database, we see that the "names" table have
 been dropped! What happened? Due to the way the SQL portion was inserted 
 directly between the quotes, our query has become the following:
 </p>
@@ -209,7 +219,7 @@ SQL injection vulnerabilities are extremely dangerous. Reportedly
 least 11% of the Internet's web-sites are vulnerable to SQL injection</a> 
 and it is featured in <a href="http://www.sans.org/top25errors/">The SANS 
 Institute's "Top 25 Most Dangerous Programming Errors"</a>. There was
-also <a href="http://xkcd.com/327/">an xkcd comic about it</a>.
+also <a href="http://xkcd.com/327/">an xkcd comic strip about it</a>.
 </p>
 
 <p>

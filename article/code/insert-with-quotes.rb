@@ -1,5 +1,5 @@
 #!/usr/bin/env ruby
-require 'sqlite3'
+require 'mysql'
 
 def input
     ret = gets()
@@ -7,10 +7,19 @@ def input
     return ret
 end
 
+user = "root"
+password = ""
+
 print( "Enter a name to insert:\n" )
 name = input()
 
-db = SQLite3::Database.new( "injection1.db" )
-db.execute_batch( 
+
+dbh = Mysql.real_connect(
+    "localhost", user, password, "test_injection1", 
+    nil, nil, Mysql::CLIENT_MULTI_STATEMENTS
+)
+
+dbh.query(
     "INSERT INTO names (id, name) VALUES (null, " + "'" + name + "'" + ")" 
 )
+
