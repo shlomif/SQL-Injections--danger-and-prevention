@@ -343,6 +343,13 @@ queries does not have extraneous permissions that will allow it to do much
 damage in case an SQL injection is found. 
 </p>
 
+<p>
+Finally, you should consider deploying a database firewall such as
+<a href="http://www.greensql.net/about">GreenSQL</a>, which detects and
+many harmful variants of SQL injections and can prevent them from doing
+a lot of damage.
+</p>
+
 <h2 id="summary">Summary</h2>
 
 <p>
