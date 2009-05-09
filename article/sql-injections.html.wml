@@ -6,14 +6,14 @@
 <h2 id="intro">Introduction</h2>
 
 <p>
-Most database servers have standarised on using a query syntax
+Most database servers have standardised on using a query syntax
 derived from <a href="http://en.wikipedia.org/wiki/SQL">SQL - The
 Structured Query Language</a>, where one can use text queries based on
 SQL commands such as 
 <a href="http://en.wikipedia.org/wiki/Select_(SQL)">SELECT</a> or
 <a href="http://en.wikipedia.org/wiki/Insert_(SQL)">INSERT</a> to
 request data or modify it. Since we normally query based on user requests,
-the naïve solution for cutomising the SQL queries to input from the user
+the naïve solution for customising the SQL queries to input from the user
 has been to include this user-derived data inside the queries text. 
 </p>
 
@@ -21,7 +21,7 @@ has been to include this user-derived data inside the queries text.
 <a href="http://en.wikipedia.org/wiki/SQL_injection">SQL injections</a> 
 are a common form of vulnerability in applications that are using 
 SQL databases, which are caused by the practice of including arbitrary
-data direclty inside the SQL queries. This article will explain what SQL 
+data directly inside the SQL queries. This article will explain what SQL 
 injections are, why they are dangerous and give some advice on how to avoid
 them.
 </p>
