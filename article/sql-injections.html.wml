@@ -14,7 +14,7 @@ SQL commands such as
 <a href="http://en.wikipedia.org/wiki/Insert_(SQL)">INSERT</a> to
 request data or modify it. Since we normally query based on user requests,
 the naïve solution for customising the SQL queries to input from the user
-has been to include this user-derived data inside the queries text. 
+has been to include this user-derived data inside the queries' text. 
 </p>
 
 <p>
