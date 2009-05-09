@@ -294,7 +294,7 @@ insert_query.execute("String with single-quotes - ' - won't break.");
 </pre>
 
 <p>
-Notice the "?" at the query, and the fact that we can pass the raw,
+Notice the "?" in the query, and the fact that we can pass the raw,
 unprocessed, variable as is to the query in its place.
 </p>
 
