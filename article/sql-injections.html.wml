@@ -29,7 +29,7 @@ them.
 <h2 id="what_are_sql_injections">What are SQL Injections?</h2>
 
 <p>
-Let's suppose we have the following table definition in an 
+Let's suppose we have the following table definition in a
 <a href="http://www.mysql.com/">MySQL</a> database called test_injection1:
 </p>
 
@@ -146,13 +146,15 @@ the string prematurely. The answer is that in case it may either simply fail:
 $ ruby insert-with-quotes.rb
 Enter a name to insert:
 Ralph O'Henry
-insert-with-quotes.rb:18:in `query': You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'Henry')' at line 1 (Mysql::Error)
+insert-with-quotes.rb:18:in `query': You have an error in your SQL syntax;
+check the manual that corresponds to your MySQL server version for the
+right syntax to use near 'Henry')' at line 1 (Mysql::Error)
         from insert-with-quotes.rb:18
 </pre>
 
 <p>
 But since we can terminate the string, and then proceed to insert arbitrary
-SQL, it could be much worse:
+SQL, it can get much worse:
 </p>
 
 <pre>
@@ -191,9 +193,11 @@ by the code.
 </p>
 
 <p>
-Even if the interface to the database did not allow us to execute as many 
-statements as we'd like, then SQL injection attacks can still do a lot of 
-damage. For example the following example taken from <a href="http://en.wikipedia.org/wiki/SQL_injection">the Wikipedia page about SQL injections</a>:
+Even if the interface to the database did not allow us to execute as many
+statements as we'd like, then SQL injection attacks can still do a lot of
+damage. For example, there's the following example taken from
+<a href="http://en.wikipedia.org/wiki/SQL_injection">the
+Wikipedia page about SQL injections</a>:
 </p>
 
 <p>
@@ -221,7 +225,7 @@ SELECT * FROM users WHERE name = 'a' OR 't'='t';
 </pre>
 
 <p>
-And as such the WHERE condition always evaluates to true, bypassing potential
+And as such, the WHERE condition always evaluates to true, bypassing potential
 security measurements.
 </p>
 
@@ -337,7 +341,7 @@ damage in case an SQL injection is found.
 
 <p>
 Finally, you should consider deploying a database firewall such as
-<a href="http://www.greensql.net/about">GreenSQL</a>, which detects and
+<a href="http://www.greensql.net/about">GreenSQL</a>, which detects
 many harmful variants of SQL injections and can prevent them from doing
 a lot of damage.
 </p>
