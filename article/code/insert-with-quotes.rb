@@ -20,6 +20,6 @@ dbh = Mysql.real_connect(
 )
 
 dbh.query(
-    "INSERT INTO names (id, name) VALUES (null, " + "'" + name + "'" + ")" 
+    "INSERT INTO names (id, name) VALUES (null, '" + name + "')" 
 )
 

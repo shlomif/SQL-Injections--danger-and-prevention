@@ -104,7 +104,7 @@ dbh = Mysql.real_connect(
 )
 
 dbh.query(
-    "INSERT INTO names (id, name) VALUES (null, " + "'" + name + "'" + ")" 
+    "INSERT INTO names (id, name) VALUES (null, '" + name + "')" 
 )
 </pre>
 
@@ -153,8 +153,23 @@ right syntax to use near 'Henry')' at line 1 (Mysql::Error)
 </pre>
 
 <p>
-But since we can terminate the string, and then proceed to insert arbitrary
-SQL, it can get much worse:
+This is because the query now becomes:
+</p>
+
+<pre>
+INSERT INTO names (id, name) VALUES (null, 'Ralph O'Henry')
+</pre>
+
+<p>
+Which is invalid SQL.
+</p>
+
+<h3 id="but_it_could_be_worse">But it could be much worse.</h3>
+
+<p>
+It's bad enough that a single quote could cause the query to fail. But a
+malicious user need not stop at that. Since we can terminate the string, and
+then proceed to insert arbitrary SQL, it can get much worse:
 </p>
 
 <pre>
