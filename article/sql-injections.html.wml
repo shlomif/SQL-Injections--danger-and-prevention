@@ -9,19 +9,19 @@
 Most database servers have standardised on using a query syntax
 derived from <a href="http://en.wikipedia.org/wiki/SQL">SQL - The
 Structured Query Language</a>, where one can use text queries based on
-SQL commands such as 
+SQL commands such as
 <a href="http://en.wikipedia.org/wiki/Select_(SQL)">SELECT</a> or
 <a href="http://en.wikipedia.org/wiki/Insert_(SQL)">INSERT</a> to
 request data or modify it. Since we normally base our queries on user requests,
 the naïve solution for customising the SQL queries to input from the user
-has been to include this user-derived data inside the queries' text. 
+has been to include this user-derived data inside the queries' text.
 </p>
 
 <p>
-<a href="http://en.wikipedia.org/wiki/SQL_injection">SQL injections</a> 
-are a common form of vulnerability in applications that are using 
+<a href="http://en.wikipedia.org/wiki/SQL_injection">SQL injections</a>
+are a common form of vulnerability in applications that are using
 SQL databases, which are caused by the practice of including arbitrary
-data directly inside the SQL queries. This article will explain what SQL 
+data directly inside the SQL queries. This article will explain what SQL
 injections are, why they are dangerous and give some advice on how to avoid
 them.
 </p>
@@ -50,17 +50,17 @@ print( "Enter a name to insert:\n" )
 name = input()
 
 dbh = Mysql.real_connect(
-    "localhost", user, password, "test_injection1", 
+    "localhost", user, password, "test_injection1",
     nil, nil, Mysql::CLIENT_MULTI_STATEMENTS
 )
 
 dbh.query(
-    "INSERT INTO names (id, name) VALUES (null, " + name + ")" 
+    "INSERT INTO names (id, name) VALUES (null, " + name + ")"
 )
 </pre>
 
 <p>
-(It's written in <a href="http://www.ruby-lang.org/en/">Ruby</a>, but should 
+(It's written in <a href="http://www.ruby-lang.org/en/">Ruby</a>, but should
 be easy to understand for people who are not familiar with it.)
 </p>
 
@@ -76,7 +76,7 @@ Enter a name to insert:
 </pre>
 
 <p>
-But if we try to insert some letters, we get: 
+But if we try to insert some letters, we get:
 </p>
 
 <pre>
@@ -88,7 +88,7 @@ insert-without-quotes.rb:18:in `query': Unknown column 'Jake' in 'field list' (M
 </pre>
 
 <p>
-The important thing here is the "Unknown column" error that we get from 
+The important thing here is the "Unknown column" error that we get from
 MySQL. What happens is that the SQL back-end does not know how to understand
 the bare words. Therefore, we must enclose the string in the SQL standard
 single quotes (<tt>'…'</tt>). This makes our code the following:
@@ -99,12 +99,12 @@ print( "Enter a name to insert:\n" )
 name = input()
 
 dbh = Mysql.real_connect(
-    "localhost", user, password, "test_injection1", 
+    "localhost", user, password, "test_injection1",
     nil, nil, Mysql::CLIENT_MULTI_STATEMENTS
 )
 
 dbh.query(
-    "INSERT INTO names (id, name) VALUES (null, '" + name + "')" 
+    "INSERT INTO names (id, name) VALUES (null, '" + name + "')"
 )
 </pre>
 
@@ -138,7 +138,7 @@ mysql&gt;  SELECT * FROM names ;
 
 <p>
 But is it really bullet-proof? Notice that we inserted the name field directly
-into the SQL. What will happen if it contains single-quotes that terminate 
+into the SQL. What will happen if it contains single-quotes that terminate
 the string prematurely. The answer is that in case it may either simply fail:
 </p>
 
@@ -189,7 +189,7 @@ ERROR 1146 (42S02): Table 'test_injection1.names' doesn't exist
 
 <p>
 So looking at the database, we see that the "names" table have
-been dropped! What happened? Due to the way the SQL portion was inserted 
+been dropped! What happened? Due to the way the SQL portion was inserted
 directly between the quotes, our query has become the following:
 </p>
 
@@ -248,9 +248,9 @@ security measurements.
 
 <p>
 SQL injection vulnerabilities are extremely dangerous. Reportedly
-<a href="http://www.rimmkaufman.com/rkgblog/2006/09/27/11-of-sites-vulnerable-to-sql-injection-is-yours/">at 
-least 11% of the Internet's web-sites are vulnerable to SQL injection</a> 
-and it is featured in <a href="http://www.sans.org/top25errors/">The SANS 
+<a href="http://www.rimmkaufman.com/rkgblog/2006/09/27/11-of-sites-vulnerable-to-sql-injection-is-yours/">at
+least 11% of the Internet's web-sites are vulnerable to SQL injection</a>
+and it is featured in <a href="http://www.sans.org/top25errors/">The SANS
 Institute's "Top 25 Most Dangerous Programming Errors"</a>. There was
 also <a href="http://xkcd.com/327/">an xkcd comic strip about it</a>.
 </p>
@@ -269,9 +269,9 @@ injection vulnerabilities. The first way is to use the database interface's
 "quote" or "escape" function to escape a string before inserting into the
 SQL query. For example, PHP+MySQL have
 <a href="http://php.net/mysql_real_escape_string">mysql_real_escape_string</a>
-for that, while <a href="http://dbi.perl.org/">Perl's DBI</a> has 
-<tt>$dbh-&gt;quote</tt>. Note that sometimes these functions return an 
-embeddable  portion of the SQL string that should be inserted into a larger 
+for that, while <a href="http://dbi.perl.org/">Perl's DBI</a> has
+<tt>$dbh-&gt;quote</tt>. Note that sometimes these functions return an
+embeddable  portion of the SQL string that should be inserted into a larger
 SQL string like so:
 </p>
 
@@ -288,7 +288,7 @@ query = "INSERT INTO names (id, name) VALUES (null, " + quote(name) + ")");
 </pre>
 
 <p>
-Consult the documentation for what is the case. 
+Consult the documentation for what is the case.
 </p>
 
 <p>
@@ -315,7 +315,7 @@ unprocessed, variable as is to the query in its place.
 
 <p>
 Some database interfaces have named placeholders (for example, using ":name"
-or ":address") instead of the positional "?" placeholders. They are 
+or ":address") instead of the positional "?" placeholders. They are
 preferable because they can be re-used in the same query, and are harder
 to mix up when calling execute.
 </p>
@@ -323,12 +323,12 @@ to mix up when calling execute.
 <h3 id="regex">Escaping SQL inside Regular Expressions</h3>
 
 <p>
-<a href="http://phroggy.com/weblog/63.html">phroggy reports on another 
-variation on SQL injection</a>. Essentially, when we use the 
+<a href="http://phroggy.com/weblog/63.html">phroggy reports on another
+variation on SQL injection</a>. Essentially, when we use the
 <a href="http://www.infogoal.com/sql/sql-like.htm">LIKE operator</a>,
 it matches a string against a pattern with '%' (any number of zero or
-more characters) and '_' (any single character). If part of it is a 
-string that is input from the user, then the pattern special characters in the 
+more characters) and '_' (any single character). If part of it is a
+string that is input from the user, then the pattern special characters in the
 string should be escaped as well.
 </p>
 
@@ -337,21 +337,21 @@ This is also true for other forms of regular expressions that are supported
 by the database implementation.
 </p>
 
-<h3 id="other_way">Other Measures to Reduce the Danger of 
+<h3 id="other_way">Other Measures to Reduce the Danger of
 SQL Injection</h3>
 
 <p>
-There are other measures that are helpful to reduce the possible damage an 
-attacker can cause. First of all it may be a good idea to make sure only one 
-query can be executed by a single "execute()" call, so the "DROP TABLE" 
-example given above won't work. Consult your database driver's documentation 
+There are other measures that are helpful to reduce the possible damage an
+attacker can cause. First of all it may be a good idea to make sure only one
+query can be executed by a single "execute()" call, so the "DROP TABLE"
+example given above won't work. Consult your database driver's documentation
 for how to achieve that.
 </p>
 
 <p>
 Another useful measure is to make sure that the database user that executes the
 queries does not have extraneous permissions that will allow it to do much
-damage in case an SQL injection is found. 
+damage in case an SQL injection is found.
 </p>
 
 <p>

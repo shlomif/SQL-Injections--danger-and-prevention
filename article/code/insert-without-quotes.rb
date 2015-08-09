@@ -14,10 +14,10 @@ print( "Enter a name to insert:\n" )
 name = input()
 
 dbh = Mysql.real_connect(
-    "localhost", user, password, "test_injection1", 
+    "localhost", user, password, "test_injection1",
     nil, nil, Mysql::CLIENT_MULTI_STATEMENTS
 )
 
 dbh.query(
-    "INSERT INTO names (id, name) VALUES (null, " + name + ")" 
+    "INSERT INTO names (id, name) VALUES (null, " + name + ")"
 )
