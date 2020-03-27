@@ -4,3 +4,5 @@ Originally written as a commission by [GreenSQL](https://sourceforge.net/project
 
 Was released under [CC-BY](https://creativecommons.org/licenses/by/4.0/) several years
 after it was written.
+
+[Rendered Text](./sql-injections.asciidoc).
