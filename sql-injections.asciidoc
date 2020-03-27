@@ -1,0 +1,306 @@
+== SQL Injections
+
+[[intro]]
+=== Introduction
+
+Most database servers have standardised on using a query syntax derived
+from http://en.wikipedia.org/wiki/SQL[SQL - The Structured Query
+Language], where one can use text queries based on SQL commands such as
+http://en.wikipedia.org/wiki/Select_(SQL)[SELECT] or
+http://en.wikipedia.org/wiki/Insert_(SQL)[INSERT] to request data or
+modify it. Since we normally base our queries on user requests, the
+naïve solution for customising the SQL queries to input from the user
+has been to include this user-derived data inside the queries' text.
+
+http://en.wikipedia.org/wiki/SQL_injection[SQL injections] are a common
+form of vulnerability in applications that are using SQL databases,
+which are caused by the practice of including arbitrary data directly
+inside the SQL queries. This article will explain what SQL injections
+are, why they are dangerous and give some advice on how to avoid them.
+
+[[what_are_sql_injections]]
+=== What are SQL Injections?
+
+Let's suppose we have the following table definition in a
+http://www.mysql.com/[MySQL] database called test_injection1:
+
+....
+CREATE TABLE names (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR (255)
+);
+....
+
+Let's say we've written a program to insert a new name into the
+`+names+` table like so:
+
+....
+print( "Enter a name to insert:\n" )
+name = input()
+
+dbh = Mysql.real_connect(
+    "localhost", user, password, "test_injection1",
+    nil, nil, Mysql::CLIENT_MULTI_STATEMENTS
+)
+
+dbh.query(
+    "INSERT INTO names (id, name) VALUES (null, " + name + ")"
+)
+....
+
+(It's written in http://www.ruby-lang.org/en/[Ruby], but should be easy
+to understand for people who are not familiar with it.)
+
+As one can see this program passes the name directly as the field
+argument in the SQL. It works if we enter a number:
+
+....
+$ ruby insert-without-quotes.rb
+Enter a name to insert:
+150
+....
+
+But if we try to insert some letters, we get:
+
+....
+$ ruby insert-without-quotes.rb
+Enter a name to insert:
+Jake
+insert-without-quotes.rb:18:in `query': Unknown column 'Jake' in 'field list' (Mysql::Error)
+        from insert-without-quotes.rb:18
+....
+
+The important thing here is the "Unknown column" error that we get from
+MySQL. What happens is that the SQL back-end does not know how to
+understand the bare words. Therefore, we must enclose the string in the
+SQL standard single quotes (`+'…'+`). This makes our code the following:
+
+....
+print( "Enter a name to insert:\n" )
+name = input()
+
+dbh = Mysql.real_connect(
+    "localhost", user, password, "test_injection1",
+    nil, nil, Mysql::CLIENT_MULTI_STATEMENTS
+)
+
+dbh.query(
+    "INSERT INTO names (id, name) VALUES (null, '" + name + "')"
+)
+....
+
+This seems to work fine:
+
+....
+$ ruby insert-with-quotes.rb
+Enter a name to insert:
+Jake
+$ ruby insert-with-quotes.rb
+Enter a name to insert:
+Sophie
+$ mysql test_injection1
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1058
+Server version: 5.1.34 Mandriva Linux - MySQL Standard Edition (GPL)
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql>  SELECT * FROM names ;
++----+--------+
+| id | name   |
++----+--------+
+|  1 | Jake   |
+|  2 | Sophie |
++----+--------+
+2 rows in set (0.03 sec)
+....
+
+But is it really bullet-proof? Notice that we inserted the name field
+directly into the SQL. What will happen if it contains single-quotes
+that terminate the string prematurely. The answer is that in case it may
+either simply fail:
+
+....
+$ ruby insert-with-quotes.rb
+Enter a name to insert:
+Ralph O'Henry
+insert-with-quotes.rb:18:in `query': You have an error in your SQL syntax;
+check the manual that corresponds to your MySQL server version for the
+right syntax to use near 'Henry')' at line 1 (Mysql::Error)
+        from insert-with-quotes.rb:18
+....
+
+This is because the query now becomes:
+
+....
+INSERT INTO names (id, name) VALUES (null, 'Ralph O'Henry')
+....
+
+Which is invalid SQL.
+
+[[but_it_could_be_worse]]
+==== But it could be much worse.
+
+It's bad enough that a single quote could cause the query to fail. But a
+malicious user need not stop at that. Since we can terminate the string,
+and then proceed to insert arbitrary SQL, it can get much worse:
+
+....
+$ ruby insert-with-quotes.rb
+Enter a name to insert:
+a');DROP TABLE names; SELECT * FROM data WHERE (name LIKE '%
+$ mysql test_injection1
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1090
+Server version: 5.1.34 Mandriva Linux - MySQL Standard Edition (GPL)
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> SELECT * FROM names ;
+ERROR 1146 (42S02): Table 'test_injection1.names' doesn't exist
+....
+
+So looking at the database, we see that the "names" table have been
+dropped! What happened? Due to the way the SQL portion was inserted
+directly between the quotes, our query has become the following:
+
+....
+INSERT INTO names (id, name) VALUES (null, 'a');
+DROP TABLE names;
+SELECT * FROM data WHERE (name LIKE '%')
+....
+
+These are in fact three SQL statements grouped into one: the first
+inserts a dummy value into names. The second drops the table, and the
+third forms a well-formed query that will be compilable by strict SQL
+engines but that would in fact just serve to terminate the rest of the
+query passed by the code.
+
+Even if the interface to the database did not allow us to execute as
+many statements as we'd like, then SQL injection attacks can still do a
+lot of damage. For example, there's the following example taken from
+http://en.wikipedia.org/wiki/SQL_injection[the Wikipedia page about SQL
+injections]:
+
+With the code:
+
+....
+statement = "SELECT * FROM users WHERE name = '" + userName + "';"
+....
+
+And the following value of the userName variable:
+
+....
+a' or 't'='t
+....
+
+Then the query becomes:
+
+....
+SELECT * FROM users WHERE name = 'a' OR 't'='t';
+....
+
+And as such, the WHERE condition always evaluates to true, bypassing
+potential security measurements.
+
+[[the_danger]]
+=== The Danger of SQL Injection
+
+SQL injection vulnerabilities are extremely dangerous. Reportedly
+http://www.rimmkaufman.com/rkgblog/2006/09/27/11-of-sites-vulnerable-to-sql-injection-is-yours/[at
+least 11% of the Internet's web-sites are vulnerable to SQL injection]
+and it is featured in http://www.sans.org/top25errors/[The SANS
+Institute's "Top 25 Most Dangerous Programming Errors"]. There was also
+http://xkcd.com/327/[an xkcd comic strip about it].
+
+http://blog.wired.com/monkeybites/2008/04/microsoft-datab.html[Wired
+reported on an attack] that caused half a million servers to be infected
+using an SQL injection vulnerability.
+
+[[defending]]
+=== How to defend against SQL Injections
+
+There are several ways a conscious programmer can defend against SQL
+injection vulnerabilities. The first way is to use the database
+interface's "quote" or "escape" function to escape a string before
+inserting into the SQL query. For example, PHP+MySQL have
+http://php.net/mysql_real_escape_string[mysql_real_escape_string] for
+that, while http://dbi.perl.org/[Perl's DBI] has `+$dbh->quote+`. Note
+that sometimes these functions return an embeddable portion of the SQL
+string that should be inserted into a larger SQL string like so:
+
+....
+query = "INSERT INTO names (id, name) VALUES (null, '" + escape(name) + "')";
+....
+
+And sometimes they return an entire, quoted SQL string:
+
+....
+query = "INSERT INTO names (id, name) VALUES (null, " + quote(name) + ")");
+....
+
+Consult the documentation for what is the case.
+
+An even better way to protect against the possibility of an SQL
+injection is to use
+http://en.wikipedia.org/wiki/SQL_injection#Using_Parameterized_Statements[placeholders].
+They work by designating various places inside the query as placeholders
+for values, which are then filled when the query is executed. So our
+pseudo-code will look like:
+
+....
+insert_query = prepare("INSERT INTO names (id, name) VALUES (null, ?)");
+.
+.
+.
+insert_query.execute(name1);
+insert_query.execute(name2);
+insert_query.execute("String with single-quotes - ' - won't break.");
+....
+
+Notice the "?" in the query, and the fact that we can pass the raw,
+unprocessed, variable as is to the query in its place.
+
+Some database interfaces have named placeholders (for example, using
+":name" or ":address") instead of the positional "?" placeholders. They
+are preferable because they can be re-used in the same query, and are
+harder to mix up when calling execute.
+
+[[regex]]
+==== Escaping SQL inside Regular Expressions
+
+http://phroggy.com/weblog/63.html[phroggy reports on another variation
+on SQL injection]. Essentially, when we use the
+http://www.infogoal.com/sql/sql-like.htm[LIKE operator], it matches a
+string against a pattern with '%' (any number of zero or more
+characters) and '_' (any single character). If part of it is a string
+that is input from the user, then the pattern special characters in the
+string should be escaped as well.
+
+This is also true for other forms of regular expressions that are
+supported by the database implementation.
+
+[[other_way]]
+==== Other Measures to Reduce the Danger of SQL Injection
+
+There are other measures that are helpful to reduce the possible damage
+an attacker can cause. First of all it may be a good idea to make sure
+only one query can be executed by a single "execute()" call, so the
+"DROP TABLE" example given above won't work. Consult your database
+driver's documentation for how to achieve that.
+
+Another useful measure is to make sure that the database user that
+executes the queries does not have extraneous permissions that will
+allow it to do much damage in case an SQL injection is found.
+
+Finally, you should consider deploying a database firewall such as
+http://www.greensql.net/about[GreenSQL], which detects many harmful
+variants of SQL injections and can prevent them from doing a lot of
+damage.
+
+=== Summary
+
+SQL injections pose a big risk to the security of applications and data
+that work with an SQL database. We hope this article gave you the
+necessary tools and knowledge to write safer SQL-calling code that won't
+be vulnerable to this issue.
