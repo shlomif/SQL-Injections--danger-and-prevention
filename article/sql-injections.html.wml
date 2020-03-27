@@ -1,4 +1,4 @@
-#include "shlomif-shlomif-article.wml"
+#include "shlomif-html-article-template.wml"
 <article_subject "SQL Injections" />
 <article_description "SQL Injections - why are they dangerous and how to avoid them" />
 <article_keywords "SQL, injections, database, security" />
